@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MTS Platform</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --gold: #C9A84C;
+      --gold-light: #E8C97A;
+      --gold-dark: #8B6914;
+      --black: #0A0A0A;
+      --dark: #111111;
+      --dark2: #1A1A1A;
+      --dark3: #222222;
+      --border: #2A2A2A;
+      --text: #E8E8E8;
+      --text-muted: #888888;
+      --success: #2ECC71;
+      --error: #E74C3C;
+      --radius: 10px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--black);
+      color: var(--text);
+      min-height: 100vh;
+      direction: rtl;
+    }
+
+    /* ========== SCREENS ========== */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* ========== AUTH SCREENS ========== */
+    .auth-wrapper {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 20px;
+      background: radial-gradient(ellipse at top, #1a1500 0%, var(--black) 60%);
+    }
+
+    .auth-card {
+      background: var(--dark2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      padding: 10px 20px;
+      border-radius: 50px;
+      margin-bottom: 12px;
+    }
+
+    .logo-badge span {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--black);
+      letter-spacing: 2px;
+    }
+
+    .logo-sub {
+      color: var(--text-muted);
+      font-size: 13px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .auth-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      background: var(--dark3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s;
+      direction: rtl;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 18px; height: 18px;
+      accent-color: var(--gold);
+      cursor: pointer;
+    }
+
+    .checkbox-row label {
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: var(--black);
+    }
+
+    .btn-gold:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+
+    .auth-switch {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .auth-switch a {
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    /* ========== PASSWORD REVEAL SCREEN ========== */
+    .password-reveal {
+      background: var(--dark2);
+      border: 1px solid var(--gold-dark);
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .password-reveal h2 {
+      text-align: center;
+      margin-bottom: 8px;
+      font-size: 20px;
+    }
+
+    .password-reveal p {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    .password-box {
+      background: var(--dark3);
+      border: 1px solid var(--gold);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .password-box .pwd-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .password-box .pwd-value {
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      color: var(--gold);
+      word-break: break-all;
+      letter-spacing: 1px;
+    }
+
+    .warning-box {
+      background: rgba(231, 76, 60, 0.1);
+      border: 1px solid rgba(231, 76, 60, 0.3);
+      border-radius: var(--radius);
+      padding: 14px;
+      font-size: 13px;
+      color: #E74C3C;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .confirm-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 14px;
+      background: var(--dark3);
+      border-radius: var(--radius);
+    }
+
+    .confirm-check input { margin-top: 2px; accent-color: var(--gold); }
+    .confirm-check label { font-size: 13px; color: var(--text-muted); cursor: pointer; }
+
+    /* ========== MAIN APP ========== */
+    .app-header {
+      background: var(--dark2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-badge {
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: var(--black);
+      font-weight: 700;
+      font-size: 14px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+    }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-info {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .btn-sm {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-sm-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .btn-sm-outline:hover { border-color: var(--error); color: var(--error); }
+
+    .btn-sm-gold {
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: var(--black);
+      font-weight: 600;
+    }
+
+    /* ========== TABS ========== */
+    .tabs {
+      display: flex;
+      background: var(--dark2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      gap: 4px;
+    }
+
+    .tab {
+      padding: 14px 18px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    /* ========== CONTENT ========== */
+    .content {
+      flex: 1;
+      padding: 24px;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ========== CARDS ========== */
+    .card {
+      background: var(--dark2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title::before {
+      content: '';
+      width: 3px;
+      height: 18px;
+      background: var(--gold);
+      border-radius: 2px;
+    }
+
+    /* ========== STATS ========== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--dark3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ========== COIN BALANCE ========== */
+    .balance-card {
+      background: linear-gradient(135deg, #1a1200, #2a1e00);
+      border: 1px solid var(--gold-dark);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .balance-info h3 {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .balance-amount {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .balance-amount span {
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-right: 6px;
+    }
+
+    .coin-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--black);
+    }
+
+    /* ========== INPUT ROW ========== */
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .input-row input {
+      flex: 1;
+      background: var(--dark3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      direction: ltr;
+    }
+
+    .input-row input:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+
+    .input-row button {
+      padding: 11px 20px;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: var(--black);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+
+    .input-row button:hover { opacity: 0.9; }
+
+    /* ========== COUPONS GRID ========== */
+    .coupons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .coupon-card {
+      background: var(--dark3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      transition: border-color 0.2s;
+    }
+
+    .coupon-card:hover { border-color: var(--gold-dark); }
+
+    .coupon-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .coupon-cost {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(201, 168, 76, 0.15);
+      color: var(--gold);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .coupon-uses {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .btn-redeem {
+      width: 100%;
+      padding: 9px;
+      background: transparent;
+      border: 1px solid var(--gold-dark);
+      color: var(--gold);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .btn-redeem:hover {
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: var(--black);
+    }
+
+    /* ========== COIN LIST ========== */
+    .coin-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .coin-item {
+      background: var(--dark3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .coin-code {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: var(--text-muted);
+      direction: ltr;
+    }
+
+    .coin-val {
+      background: rgba(201, 168, 76, 0.15);
+      color: var(--gold);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* ========== ADMIN ========== */
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .admin-grid { grid-template-columns: 1fr; }
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .form-inline input, .form-row input {
+      width: 100%;
+      background: var(--dark3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      direction: rtl;
+    }
+
+    .form-inline input:focus, .form-row input:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+
+    .form-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .btn-generate {
+      width: 100%;
+      padding: 11px;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: var(--black);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+
+    .btn-generate:hover { opacity: 0.9; }
+
+    .generated-list {
+      margin-top: 16px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .gen-item {
+      background: var(--dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: var(--gold);
+      direction: ltr;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 2px 6px;
+    }
+
+    .copy-btn:hover { color: var(--gold); }
+
+    /* ========== COINS TABLE (ADMIN) ========== */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead { background: var(--dark3); }
+
+    th {
+      padding: 12px 16px;
+      text-align: right;
+      color: var(--text-muted);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--dark3); }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .badge-gold { background: rgba(201,168,76,0.15); color: var(--gold); }
+    .badge-green { background: rgba(46,204,113,0.15); color: var(--success); }
+    .badge-gray { background: rgba(136,136,136,0.15); color: var(--text-muted); }
+
+    /* ========== TOAST ========== */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--dark2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 14px;
+      z-index: 1000;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: var(--success); color: var(--success); }
+    .toast.error { border-color: var(--error); color: var(--error); }
+    .toast.info { border-color: var(--gold); color: var(--gold); }
+
+    /* ========== MODAL ========== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--dark2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      width: 90%;
+      max-width: 420px;
+    }
+
+    .modal h3 { font-size: 17px; margin-bottom: 8px; }
+    .modal p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+
+    .modal-code {
+      background: var(--dark3);
+      border: 1px solid var(--gold-dark);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'Courier New', monospace;
+      font-size: 18px;
+      color: var(--gold);
+      text-align: center;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+      word-break: break-all;
+    }
+
+    .modal-btns { display: flex; gap: 10px; }
+    .modal-btns button { flex: 1; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .empty-state .empty-icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+      opacity: 0.4;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 16px 0;
+    }
+
+    .admin-tag {
+      background: rgba(201,168,76,0.15);
+      color: var(--gold);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-right: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========== SCREEN: LOGIN ========== -->
+<div id="screen-login" class="screen active">
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="logo">
+        <div class="logo-badge"><span>MTS</span></div>
+        <div class="logo-sub">Matbea Sagi Platform</div>
+      </div>
+      <div class="auth-title">כניסה לחשבון</div>
+      <div class="form-group">
+        <label>שם פרטי</label>
+        <input type="text" id="login-name" placeholder="הכנס שם פרטי">
+      </div>
+      <div class="form-group">
+        <label>סיסמא</label>
+        <input type="password" id="login-password" placeholder="הכנס סיסמא">
+      </div>
+      <button class="btn btn-gold" onclick="handleLogin()">כניסה</button>
+      <div class="auth-switch">
+        אין לך חשבון? <a onclick="showScreen('screen-register')">הירשם כאן</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCREEN: REGISTER ========== -->
+<div id="screen-register" class="screen">
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="logo">
+        <div class="logo-badge"><span>MTS</span></div>
+        <div class="logo-sub">Matbea Sagi Platform</div>
+      </div>
+      <div class="auth-title">יצירת חשבון חדש</div>
+      <div class="form-group">
+        <label>שם פרטי <span style="color:var(--text-muted);font-size:11px">(או סיסמא מנהל)</span></label>
+        <input type="text" id="reg-firstname" placeholder="שם פרטי">
+      </div>
+      <div class="form-group">
+        <label>שם משפחה</label>
+        <input type="text" id="reg-lastname" placeholder="שם משפחה">
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="reg-terms">
+        <label for="reg-terms">אני מאשר/ת את <a href="#" style="color:var(--gold)">תנאי השימוש</a></label>
+      </div>
+      <button class="btn btn-gold" onclick="handleRegister()">יצירת חשבון</button>
+      <button class="btn btn-outline" onclick="showScreen('screen-login')">חזרה לכניסה</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCREEN: PASSWORD REVEAL ========== -->
+<div id="screen-password-reveal" class="screen">
+  <div class="auth-wrapper">
+    <div class="password-reveal">
+      <div class="logo" style="margin-bottom:20px">
+        <div class="logo-badge"><span>MTS</span></div>
+      </div>
+      <h2>החשבון נוצר בהצלחה! 🎉</h2>
+      <p>זוהי הסיסמא שלך לכניסה לאתר — שמור אותה עכשיו!</p>
+      <div class="password-box">
+        <div class="pwd-label">סיסמא לחשבון שלך</div>
+        <div class="pwd-value" id="reveal-password">—</div>
+      </div>
+      <div class="warning-box">
+        ⚠️ אסור לשתף את הסיסמא עם אף אחד! לא ניתן לשחזר אותה.
+      </div>
+      <div class="confirm-check">
+        <input type="checkbox" id="confirm-saved">
+        <label for="confirm-saved">אני מאשר/ת ששמרתי את הסיסמא במקום בטוח</label>
+      </div>
+      <button class="btn btn-gold" onclick="confirmPasswordSaved()">המשך לאתר</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCREEN: APP ========== -->
+<div id="screen-app" class="screen">
+  <div class="app-header">
+    <div class="header-logo">
+      <div class="header-badge">MTS</div>
+      <div class="header-title">Platform</div>
+    </div>
+    <div class="header-right">
+      <div class="user-info" id="header-user-info"></div>
+      <button class="btn-sm btn-sm-outline" onclick="handleLogout()">יציאה</button>
+    </div>
+  </div>
+
+  <div class="tabs" id="app-tabs">
+    <div class="tab active" onclick="switchTab('tab-home')" data-tab="tab-home">🏠 ראשי</div>
+    <div class="tab" onclick="switchTab('tab-coins')" data-tab="tab-coins">🪙 המטבעות שלי</div>
+    <div class="tab" onclick="switchTab('tab-coupons')" data-tab="tab-coupons">🎟️ קופונים</div>
+    <div class="tab admin-only" onclick="switchTab('tab-admin')" data-tab="tab-admin" style="display:none">⚙️ מנהל</div>
+  </div>
+
+  <div class="content">
+
+    <!-- TAB: HOME -->
+    <div id="tab-home" class="tab-content active">
+      <div class="balance-card">
+        <div class="balance-info">
+          <h3>יתרת מטבעות</h3>
+          <div class="balance-amount"><span>MTS</span><span id="total-balance">0</span></div>
+        </div>
+        <div class="coin-icon">M</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">הוספת מטבע לחשבון</div>
+        <div class="input-row">
+          <input type="text" id="add-coin-code" placeholder="הכנס קוד מטבע / קבוצת מטבעות" dir="ltr">
+          <button onclick="addCoinByCode()">הוספה</button>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted)">הכנס את הקוד שקיבלת כדי להוסיף מטבעות לחשבונך</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">פעילות אחרונה</div>
+        <div id="recent-activity">
+          <div class="empty-state">
+            <div class="empty-icon">📊</div>
+            אין פעילות עדיין
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: MY COINS -->
+    <div id="tab-coins" class="tab-content">
+      <div class="card">
+        <div class="card-title">מטבעות בודדים</div>
+        <div id="user-coins-list" class="coin-list">
+          <div class="empty-state"><div class="empty-icon">🪙</div>אין מטבעות בודדים</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">קבוצות מטבעות</div>
+        <div id="user-groups-list" class="coin-list">
+          <div class="empty-state"><div class="empty-icon">📦</div>אין קבוצות מטבעות</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: COUPONS -->
+    <div id="tab-coupons" class="tab-content">
+      <div class="card">
+        <div class="card-title">קופונים זמינים</div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">המטבעות שלך: <strong id="balance-display" style="color:var(--gold)">0 MTS</strong></p>
+        <div id="coupons-grid" class="coupons-grid">
+          <div class="empty-state"><div class="empty-icon">🎟️</div>אין קופונים זמינים כרגע</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: ADMIN -->
+    <div id="tab-admin" class="tab-content">
+      <div class="admin-grid">
+
+        <!-- Generate Coins -->
+        <div class="card">
+          <div class="card-title">יצירת מטבעות</div>
+          <div class="form-group">
+            <div class="form-label">כמות מטבעות</div>
+            <input type="number" id="gen-coin-amount" placeholder="10" min="1" max="100" class="form-inline" style="width:100%;background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;color:var(--text);font-family:Inter,sans-serif;font-size:13px">
+          </div>
+          <div class="form-group">
+            <div class="form-label">ערך כל מטבע (MTS)</div>
+            <input type="number" id="gen-coin-value" placeholder="1" min="1" class="form-inline" style="width:100%;background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;color:var(--text);font-family:Inter,sans-serif;font-size:13px">
+          </div>
+          <button class="btn-generate" onclick="generateCoins()">⚡ צור מטבעות</button>
+          <div class="generated-list" id="generated-coins"></div>
+        </div>
+
+        <!-- Generate Groups -->
+        <div class="card">
+          <div class="card-title">יצירת קבוצות מטבעות</div>
+          <div class="form-group">
+            <div class="form-label">כמות קבוצות</div>
+            <input type="number" id="gen-group-amount" placeholder="5" min="1" max="50" class="form-inline" style="width:100%;background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;color:var(--text);font-family:Inter,sans-serif;font-size:13px">
+          </div>
+          <div class="form-group">
+            <div class="form-label">ערך כל קבוצה (MTS)</div>
+            <input type="number" id="gen-group-value" placeholder="5" min="1" class="form-inline" style="width:100%;background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;color:var(--text);font-family:Inter,sans-serif;font-size:13px">
+          </div>
+          <button class="btn-generate" onclick="generateGroups()">⚡ צור קבוצות</button>
+          <div class="generated-list" id="generated-groups"></div>
+        </div>
+
+      </div>
+
+      <!-- Manage Coupons -->
+      <div class="card">
+        <div class="card-title">ניהול קופונים</div>
+        <div class="form-row">
+          <div>
+            <div class="form-label">שם הקופון</div>
+            <input type="text" id="coupon-name" placeholder="למשל: הנחה 20%">
+          </div>
+          <div>
+            <div class="form-label">קוד הקופון</div>
+            <input type="text" id="coupon-code" placeholder="למשל: DISCOUNT20" dir="ltr">
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <div class="form-label">עלות במטבעות MTS</div>
+            <input type="number" id="coupon-cost" placeholder="5" min="1">
+          </div>
+          <div>
+            <div class="form-label">מקסימום שימושים</div>
+            <input type="number" id="coupon-max-uses" placeholder="100" min="1">
+          </div>
+        </div>
+        <button class="btn-generate" onclick="createCoupon()">➕ הוספת קופון</button>
+
+        <hr class="divider">
+        <div class="card-title" style="margin-bottom:12px">קופונים קיימים</div>
+        <div id="admin-coupons-list">
+          <div class="empty-state"><div class="empty-icon">🎟️</div>אין קופונים עדיין</div>
+        </div>
+      </div>
+
+      <!-- All Coins Table -->
+      <div class="card">
+        <div class="card-title">כל המטבעות הפעילים</div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>קוד</th>
+                <th>סוג</th>
+                <th>ערך</th>
+                <th>נוצר</th>
+              </tr>
+            </thead>
+            <tbody id="admin-coins-table">
+              <tr><td colspan="4" class="empty-state">טוען...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <button class="btn-generate" style="margin-top:12px" onclick="loadAdminCoins()">🔄 רענן רשימה</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL: COUPON REVEAL ========== -->
+<div class="modal-overlay" id="modal-coupon">
+  <div class="modal">
+    <h3>🎉 קופון מומש בהצלחה!</h3>
+    <p>הקוד שלך לשימוש:</p>
+    <div class="modal-code" id="modal-coupon-code">—</div>
+    <div class="modal-btns">
+      <button class="btn-generate" onclick="copyModalCode()">📋 העתק קוד</button>
+      <button class="btn-generate" style="background:var(--dark3);color:var(--text)" onclick="closeModal()">סגור</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TOAST ========== -->
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://jhheiwjxpajzbixdubmx.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_ruWZ311nRp_rPXZAu_yXPA_dyg-JOc5';
+const ADMIN_SECRET = 'M9xW4bT7bR2kcJ1wZ6L9ph3Gnv74nv04bvkwp94n577';
+
+let currentUser = null;
+
+// ========== API HELPERS ==========
+async function dbQuery(table, method = 'GET', body = null, filter = '') {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Prefer': method === 'POST' ? 'return=representation' : ''
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${filter}`, opts);
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || 'שגיאה בשרת');
+  }
+  if (method === 'DELETE' || res.status === 204) return null;
+  return res.json();
+}
+
+// ========== CRYPTO ==========
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function generateCode(length = 28) {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  const arr = new Uint8Array(length);
+  crypto.getRandomValues(arr);
+  arr.forEach(b => result += chars[b % chars.length]);
+  return result;
+}
+
+function generatePassword() {
+  return generateCode(32);
+}
+
+// ========== SCREEN MANAGEMENT ==========
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ========== TOAST ==========
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ========== AUTH ==========
+async function handleRegister() {
+  const firstname = document.getElementById('reg-firstname').value.trim();
+  const lastname = document.getElementById('reg-lastname').value.trim();
+  const terms = document.getElementById('reg-terms').checked;
+
+  if (!firstname || !lastname) return showToast('יש למלא שם ושם משפחה', 'error');
+  if (!terms) return showToast('יש לאשר את תנאי השימוש', 'error');
+
+  const isAdmin = firstname === ADMIN_SECRET;
+
+  try {
+    const password = generatePassword();
+    const hash = await hashPassword(password);
+
+    const users = await dbQuery('users', 'POST', {
+      first_name: isAdmin ? 'Admin' : firstname,
+      last_name: isAdmin ? 'MTS' : lastname,
+      password_hash: hash,
+      is_admin: isAdmin
+    });
+
+    const user = Array.isArray(users) ? users[0] : users;
+
+    // Save to session
+    sessionStorage.setItem('mts_user', JSON.stringify({ ...user, _password: password }));
+
+    document.getElementById('reveal-password').textContent = password;
+    showScreen('screen-password-reveal');
+
+  } catch (err) {
+    showToast('שגיאה ביצירת חשבון: ' + err.message, 'error');
+  }
+}
+
+function confirmPasswordSaved() {
+  if (!document.getElementById('confirm-saved').checked) {
+    return showToast('יש לאשר ששמרת את הסיסמא', 'error');
+  }
+  const userData = JSON.parse(sessionStorage.getItem('mts_user'));
+  currentUser = userData;
+  enterApp();
+}
+
+async function handleLogin() {
+  const name = document.getElementById('login-name').value.trim();
+  const password = document.getElementById('login-password').value.trim();
+
+  if (!name || !password) return showToast('יש למלא את כל השדות', 'error');
+
+  try {
+    const hash = await hashPassword(password);
+    const users = await dbQuery('users', 'GET', null,
+      `?first_name=eq.${encodeURIComponent(name)}&password_hash=eq.${hash}&select=*`
+    );
+
+    if (!users || users.length === 0) {
+      return showToast('שם או סיסמא שגויים', 'error');
+    }
+
+    currentUser = users[0];
+    sessionStorage.setItem('mts_user', JSON.stringify(currentUser));
+    enterApp();
+
+  } catch (err) {
+    showToast('שגיאה בכניסה: ' + err.message, 'error');
+  }
+}
+
+function handleLogout() {
+  currentUser = null;
+  sessionStorage.removeItem('mts_user');
+  showScreen('screen-login');
+  document.getElementById('login-name').value = '';
+  document.getElementById('login-password').value = '';
+}
+
+function enterApp() {
+  // Set header
+  const adminTag = currentUser.is_admin ? '<span class="admin-tag">מנהל</span>' : '';
+  document.getElementById('header-user-info').innerHTML =
+    `שלום, ${currentUser.first_name} ${adminTag}`;
+
+  // Show/hide admin tab
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = currentUser.is_admin ? 'block' : 'none';
+  });
+
+  showScreen('screen-app');
+  switchTab('tab-home');
+  loadUserData();
+}
+
+// ========== TABS ==========
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector(`[data-tab="${id}"]`).classList.add('active');
+
+  if (id === 'tab-coupons') loadCoupons();
+  if (id === 'tab-coins') loadUserCoins();
+  if (id === 'tab-admin') { loadAdminCoins(); loadAdminCoupons(); }
+}
+
+// ========== LOAD USER DATA ==========
+async function loadUserData() {
+  await loadBalance();
+  await loadRecentActivity();
+}
+
+async function loadBalance() {
+  try {
+    const coins = await dbQuery('user_coins', 'GET', null,
+      `?user_id=eq.${currentUser.id}&select=coin_id,coins(value)`);
+    const groups = await dbQuery('user_coin_groups', 'GET', null,
+      `?user_id=eq.${currentUser.id}&select=group_id,coin_groups(value)`);
+
+    let total = 0;
+    if (coins) coins.forEach(c => total += (c.coins?.value || 0));
+    if (groups) groups.forEach(g => total += (g.coin_groups?.value || 0));
+
+    document.getElementById('total-balance').textContent = total;
+    document.getElementById('balance-display').textContent = `${total} MTS`;
+  } catch (e) { console.error(e); }
+}
+
+async function loadRecentActivity() {
+  try {
+    const redemptions = await dbQuery('redemptions', 'GET', null,
+      `?user_id=eq.${currentUser.id}&select=*,coupons(name)&order=redeemed_at.desc&limit=5`);
+
+    const container = document.getElementById('recent-activity');
+    if (!redemptions || redemptions.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div>אין פעילות עדיין</div>';
+      return;
+    }
+
+    container.innerHTML = redemptions.map(r => `
+      <div class="coin-item">
+        <span>🎟️ מימוש קופון: ${r.coupons?.name || '—'}</span>
+        <span style="font-size:11px;color:var(--text-muted)">${new Date(r.redeemed_at).toLocaleDateString('he-IL')}</span>
+      </div>
+    `).join('');
+  } catch (e) { console.error(e); }
+}
+
+// ========== ADD COIN ==========
+async function addCoinByCode() {
+  const code = document.getElementById('add-coin-code').value.trim();
+  if (!code) return showToast('יש להכניס קוד', 'error');
+
+  try {
+    // Check single coin
+    const coins = await dbQuery('coins', 'GET', null,
+      `?code=eq.${encodeURIComponent(code)}&is_used=eq.false`);
+
+    if (coins && coins.length > 0) {
+      const coin = coins[0];
+      // Check not already owned
+      const existing = await dbQuery('user_coins', 'GET', null,
+        `?user_id=eq.${currentUser.id}&coin_id=eq.${coin.id}`);
+      if (existing && existing.length > 0) return showToast('מטבע זה כבר נמצא בחשבון שלך', 'error');
+
+      await dbQuery('user_coins', 'POST', { user_id: currentUser.id, coin_id: coin.id });
+      document.getElementById('add-coin-code').value = '';
+      await loadBalance();
+      showToast(`✅ מטבע נוסף! ערך: ${coin.value} MTS`, 'success');
+      return;
+    }
+
+    // Check group
+    const groups = await dbQuery('coin_groups', 'GET', null,
+      `?code=eq.${encodeURIComponent(code)}&is_used=eq.false`);
+
+    if (groups && groups.length > 0) {
+      const group = groups[0];
+      const existing = await dbQuery('user_coin_groups', 'GET', null,
+        `?user_id=eq.${currentUser.id}&group_id=eq.${group.id}`);
+      if (existing && existing.length > 0) return showToast('קבוצה זו כבר נמצאת בחשבון שלך', 'error');
+
+      await dbQuery('user_coin_groups', 'POST', { user_id: currentUser.id, group_id: group.id });
+      document.getElementById('add-coin-code').value = '';
+      await loadBalance();
+      showToast(`✅ קבוצת מטבעות נוספה! ערך: ${group.value} MTS`, 'success');
+      return;
+    }
+
+    showToast('קוד לא נמצא או כבר שומש', 'error');
+
+  } catch (err) {
+    showToast('שגיאה: ' + err.message, 'error');
+  }
+}
+
+// ========== USER COINS ==========
+async function loadUserCoins() {
+  try {
+    const coins = await dbQuery('user_coins', 'GET', null,
+      `?user_id=eq.${currentUser.id}&select=id,coin_id,coins(code,value,is_used)`);
+    const groups = await dbQuery('user_coin_groups', 'GET', null,
+      `?user_id=eq.${currentUser.id}&select=id,group_id,coin_groups(code,value,is_used)`);
+
+    const coinsList = document.getElementById('user-coins-list');
+    const groupsList = document.getElementById('user-groups-list');
+
+    if (!coins || coins.length === 0) {
+      coinsList.innerHTML = '<div class="empty-state"><div class="empty-icon">🪙</div>אין מטבעות בודדים</div>';
+    } else {
+      coinsList.innerHTML = coins.map(c => `
+        <div class="coin-item">
+          <span class="coin-code">${c.coins?.code || '—'}</span>
+          <span class="coin-val">${c.coins?.value || 0} MTS</span>
+        </div>
+      `).join('');
+    }
+
+    if (!groups || groups.length === 0) {
+      groupsList.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div>אין קבוצות מטבעות</div>';
+    } else {
+      groupsList.innerHTML = groups.map(g => `
+        <div class="coin-item">
+          <span class="coin-code">${g.coin_groups?.code || '—'}</span>
+          <span class="coin-val">${g.coin_groups?.value || 0} MTS</span>
+        </div>
+      `).join('');
+    }
+  } catch (e) { showToast('שגיאה בטעינת מטבעות', 'error'); }
+}
+
+// ========== COUPONS ==========
+async function loadCoupons() {
+  try {
+    const coupons = await dbQuery('coupons', 'GET', null, '?select=*');
+    const grid = document.getElementById('coupons-grid');
+
+    if (!coupons || coupons.length === 0) {
+      grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🎟️</div>אין קופונים זמינים כרגע</div>';
+      return;
+    }
+
+    const available = coupons.filter(c => c.used_count < c.max_uses);
+
+    if (available.length === 0) {
+      grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🎟️</div>כל הקופונים נוצלו</div>';
+      return;
+    }
+
+    grid.innerHTML = available.map(c => `
+      <div class="coupon-card">
+        <div class="coupon-name">${c.name}</div>
+        <div class="coupon-cost">🪙 ${c.cost_coins} MTS</div>
+        <div class="coupon-uses">${c.max_uses - c.used_count} שימושים נותרו</div>
+        <button class="btn-redeem" onclick="redeemCoupon('${c.id}','${c.name}','${c.code}',${c.cost_coins})">
+          המר מטבעות
+        </button>
+      </div>
+    `).join('');
+  } catch (e) { showToast('שגיאה בטעינת קופונים', 'error'); }
+}
+
+async function redeemCoupon(couponId, couponName, couponCode, cost) {
+  // Calculate user balance
+  const coins = await dbQuery('user_coins', 'GET', null,
+    `?user_id=eq.${currentUser.id}&select=coin_id,coins(id,value)`);
+  const groups = await dbQuery('user_coin_groups', 'GET', null,
+    `?user_id=eq.${currentUser.id}&select=group_id,coin_groups(id,value)`);
+
+  let balance = 0;
+  if (coins) coins.forEach(c => balance += (c.coins?.value || 0));
+  if (groups) groups.forEach(g => balance += (g.coin_groups?.value || 0));
+
+  if (balance < cost) {
+    return showToast(`אין מספיק מטבעות. יש לך ${balance} MTS, נדרש ${cost} MTS`, 'error');
+  }
+
+  // Check this coupon wasn't already redeemed by this user
+  const prevRedemptions = await dbQuery('redemptions', 'GET', null,
+    `?user_id=eq.${currentUser.id}&coupon_id=eq.${couponId}`);
+  if (prevRedemptions && prevRedemptions.length > 0) {
+    return showToast('כבר מימשת קופון זה בעבר', 'error');
+  }
+
+  // Deduct coins (prefer individual coins first, then groups)
+  let remaining = cost;
+  const allCoins = coins ? [...coins] : [];
+  const allGroups = groups ? [...groups] : [];
+
+  for (const uc of allCoins) {
+    if (remaining <= 0) break;
+    const val = uc.coins?.value || 0;
+    if (val <= remaining) {
+      remaining -= val;
+      // Mark coin as used and remove from user
+      await dbQuery(`coins?id=eq.${uc.coin_id}`, 'PATCH', { is_used: true });
+      await dbQuery(`user_coins?user_id=eq.${currentUser.id}&coin_id=eq.${uc.coin_id}`, 'DELETE');
+    }
+  }
+
+  for (const ug of allGroups) {
+    if (remaining <= 0) break;
+    const val = ug.coin_groups?.value || 0;
+    if (val <= remaining) {
+      remaining -= val;
+      await dbQuery(`coin_groups?id=eq.${ug.group_id}`, 'PATCH', { is_used: true });
+      await dbQuery(`user_coin_groups?user_id=eq.${currentUser.id}&group_id=eq.${ug.group_id}`, 'DELETE');
+    }
+  }
+
+  // Record redemption + increment used count
+  await dbQuery('redemptions', 'POST', { user_id: currentUser.id, coupon_id: couponId });
+  await dbQuery(`coupons?id=eq.${couponId}`, 'PATCH', { used_count: undefined });
+
+  // Increment used_count properly
+  const couponData = await dbQuery('coupons', 'GET', null, `?id=eq.${couponId}&select=used_count`);
+  if (couponData && couponData[0]) {
+    await dbQuery(`coupons?id=eq.${couponId}`, 'PATCH', { used_count: couponData[0].used_count + 1 });
+  }
+
+  // Show coupon code
+  document.getElementById('modal-coupon-code').textContent = couponCode;
+  document.getElementById('modal-coupon').classList.add('open');
+
+  await loadBalance();
+}
+
+function closeModal() {
+  document.getElementById('modal-coupon').classList.remove('open');
+}
+
+function copyModalCode() {
+  const code = document.getElementById('modal-coupon-code').textContent;
+  navigator.clipboard.writeText(code);
+  showToast('✅ הקוד הועתק!', 'success');
+}
+
+// ========== ADMIN: GENERATE COINS ==========
+async function generateCoins() {
+  const amount = parseInt(document.getElementById('gen-coin-amount').value) || 10;
+  const value = parseInt(document.getElementById('gen-coin-value').value) || 1;
+
+  if (amount < 1 || amount > 100) return showToast('כמות חייבת להיות בין 1-100', 'error');
+
+  const container = document.getElementById('generated-coins');
+  container.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">מייצר...</div>';
+
+  const generated = [];
+  for (let i = 0; i < amount; i++) {
+    const code = generateCode(28);
+    try {
+      await dbQuery('coins', 'POST', { code, value });
+      generated.push(code);
+    } catch (e) { console.error(e); }
+  }
+
+  container.innerHTML = generated.map(code => `
+    <div class="gen-item">
+      <span>${code}</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText('${code}');showToast('הועתק!','success')">העתק</button>
+    </div>
+  `).join('');
+
+  showToast(`✅ נוצרו ${generated.length} מטבעות`, 'success');
+}
+
+async function generateGroups() {
+  const amount = parseInt(document.getElementById('gen-group-amount').value) || 5;
+  const value = parseInt(document.getElementById('gen-group-value').value) || 5;
+
+  if (amount < 1 || amount > 50) return showToast('כמות חייבת להיות בין 1-50', 'error');
+
+  const container = document.getElementById('generated-groups');
+  container.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">מייצר...</div>';
+
+  const generated = [];
+  for (let i = 0; i < amount; i++) {
+    const code = 'grp_' + generateCode(24);
+    try {
+      await dbQuery('coin_groups', 'POST', { code, value });
+      generated.push({ code, value });
+    } catch (e) { console.error(e); }
+  }
+
+  container.innerHTML = generated.map(g => `
+    <div class="gen-item">
+      <span>${g.code}</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText('${g.code}');showToast('הועתק!','success')">העתק</button>
+    </div>
+  `).join('');
+
+  showToast(`✅ נוצרו ${generated.length} קבוצות`, 'success');
+}
+
+// ========== ADMIN: COUPONS ==========
+async function createCoupon() {
+  const name = document.getElementById('coupon-name').value.trim();
+  const code = document.getElementById('coupon-code').value.trim();
+  const cost = parseInt(document.getElementById('coupon-cost').value);
+  const maxUses = parseInt(document.getElementById('coupon-max-uses').value);
+
+  if (!name || !code || !cost || !maxUses) return showToast('יש למלא את כל השדות', 'error');
+
+  try {
+    await dbQuery('coupons', 'POST', { name, code, cost_coins: cost, max_uses: maxUses });
+    document.getElementById('coupon-name').value = '';
+    document.getElementById('coupon-code').value = '';
+    document.getElementById('coupon-cost').value = '';
+    document.getElementById('coupon-max-uses').value = '';
+    showToast('✅ קופון נוצר בהצלחה', 'success');
+    loadAdminCoupons();
+  } catch (err) {
+    showToast('שגיאה ביצירת קופון: ' + err.message, 'error');
+  }
+}
+
+async function loadAdminCoupons() {
+  try {
+    const coupons = await dbQuery('coupons', 'GET', null, '?select=*&order=created_at.desc');
+    const container = document.getElementById('admin-coupons-list');
+
+    if (!coupons || coupons.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">🎟️</div>אין קופונים עדיין</div>';
+      return;
+    }
+
+    container.innerHTML = `<div class="table-wrapper"><table>
+      <thead><tr><th>שם</th><th>קוד</th><th>עלות</th><th>שימושים</th></tr></thead>
+      <tbody>
+        ${coupons.map(c => `
+          <tr>
+            <td style="font-family:Inter,sans-serif">${c.name}</td>
+            <td>${c.code}</td>
+            <td><span class="badge badge-gold">${c.cost_coins} MTS</span></td>
+            <td>${c.used_count}/${c.max_uses}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table></div>`;
+  } catch (e) { console.error(e); }
+}
+
+async function loadAdminCoins() {
+  try {
+    const coins = await dbQuery('coins', 'GET', null,
+      '?is_used=eq.false&select=code,value,created_at&order=created_at.desc&limit=50');
+    const groups = await dbQuery('coin_groups', 'GET', null,
+      '?is_used=eq.false&select=code,value,created_at&order=created_at.desc&limit=50');
+
+    const tbody = document.getElementById('admin-coins-table');
+    const all = [
+      ...(coins || []).map(c => ({ ...c, type: 'מטבע' })),
+      ...(groups || []).map(g => ({ ...g, type: 'קבוצה' }))
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    if (all.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">אין מטבעות פעילים</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = all.map(item => `
+      <tr>
+        <td>${item.code}</td>
+        <td><span class="badge ${item.type === 'קבוצה' ? 'badge-green' : 'badge-gold'}">${item.type}</span></td>
+        <td>${item.value} MTS</td>
+        <td style="font-family:Inter,sans-serif">${new Date(item.created_at).toLocaleDateString('he-IL')}</td>
+      </tr>
+    `).join('');
+  } catch (e) { console.error(e); }
+}
+
+// ========== INIT ==========
+window.onload = () => {
+  const saved = sessionStorage.getItem('mts_user');
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    enterApp();
+  } else {
+    showScreen('screen-login');
+  }
+};
+</script>
+</body>
+</html>
