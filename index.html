@@ -159,7 +159,7 @@
       border-radius: 50%;
       background: #000000;
       cursor: pointer;
-      z-index: 900;
+      z-index: 950;
       opacity: 0.85;
     }
     .corner-dot.right { right: 16px; }
@@ -170,13 +170,18 @@
       position: fixed;
       top: 0;
       right: 0;
-      width: 26px;
-      height: 26px;
+      width: 160px;
+      height: 110px;
       background: transparent;
       cursor: pointer;
-      z-index: 901;
+      z-index: 899;
+      clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 36px, 36px 36px, 36px 0%);
     }
-    body.rtl .secret-square { right: auto; left: 0; }
+    body.rtl .secret-square {
+      right: auto;
+      left: 0;
+      clip-path: polygon(100% 0%, 0% 0%, 0% 100%, 100% 100%, 100% 36px, 124px 36px, 124px 0%);
+    }
 
     .app-header {
       background: var(--dark2); border-bottom: 1px solid var(--border);
