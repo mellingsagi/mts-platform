@@ -598,10 +598,11 @@
                 <th data-i18n="thType">Type</th>
                 <th data-i18n="thValue">Value</th>
                 <th data-i18n="thCreated">Created</th>
+                <th data-i18n="thOwner">Owner</th>
               </tr>
             </thead>
             <tbody id="admin-coins-table">
-              <tr><td colspan="4" class="empty-state" data-i18n="loading">Loading...</td></tr>
+              <tr><td colspan="5" class="empty-state" data-i18n="loading">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -721,6 +722,7 @@ const translations = {
     confirmDeleteCoupon: "Delete this coupon permanently?",
     addCouponBtn: "➕ Add Coupon", existingCouponsTitle: "Existing Coupons", noCouponsYet: "No coupons yet",
     allActiveCoinsTitle: "All Active Coins", thCode: "Code", thType: "Type", thValue: "Value", thCreated: "Created",
+    thOwner: "Owner", unassignedLabel: "— Unassigned —", coinTakenMsg: "This code is already assigned to another account",
     loading: "Loading...", refreshBtn: "🔄 Refresh List", couponRedeemedTitle: "🎉 Coupon Redeemed Successfully!",
     couponRedeemedMsg: "Your code to use:", copyCodeBtn: "📋 Copy Code", closeBtn: "Close",
     enterCodeTitle: "Enter Code", switchToHebrew: "Switch to Hebrew"
@@ -754,6 +756,7 @@ const translations = {
     confirmDeleteCoupon: "למחוק את הקופון לצמיתות?",
     addCouponBtn: "➕ הוספת קופון", existingCouponsTitle: "קופונים קיימים", noCouponsYet: "אין קופונים עדיין",
     allActiveCoinsTitle: "כל המטבעות הפעילים", thCode: "קוד", thType: "סוג", thValue: "ערך", thCreated: "נוצר",
+    thOwner: "שייך ל", unassignedLabel: "— לא משויך —", coinTakenMsg: "הקוד הזה כבר משויך לחשבון אחר",
     loading: "טוען...", refreshBtn: "🔄 רענן רשימה", couponRedeemedTitle: "🎉 קופון מומש בהצלחה!",
     couponRedeemedMsg: "הקוד שלך לשימוש:", copyCodeBtn: "📋 העתק קוד", closeBtn: "סגור",
     enterCodeTitle: "הכנס קוד", switchToHebrew: "החלף לעברית"
@@ -1089,6 +1092,9 @@ async function addCoinByCode() {
 
     if (res.error === 'owned') {
       return showToast(currentLang === 'he' ? 'קוד זה כבר נמצא בחשבון שלך' : 'This code is already in your account', 'error');
+    }
+    if (res.error === 'taken') {
+      return showToast(translations[currentLang].coinTakenMsg, 'error');
     }
     if (res.error === 'not_found') {
       return showToast(currentLang === 'he' ? 'קוד לא נמצא או כבר שומש' : 'Code not found or already used', 'error');
@@ -1427,18 +1433,25 @@ async function loadAdminCoins() {
     ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     if (all.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" class="empty-state">${currentLang === 'he' ? 'אין מטבעות פעילים' : 'No active coins'}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-state">${currentLang === 'he' ? 'אין מטבעות פעילים' : 'No active coins'}</td></tr>`;
       return;
     }
 
-    tbody.innerHTML = all.map(item => `
+    const unassigned = translations[currentLang].unassignedLabel;
+
+    tbody.innerHTML = all.map(item => {
+      const owner = (item.owner || '').trim();
+      return `
       <tr>
         <td>${item.code}</td>
         <td><span class="badge ${item.type === groupLabel ? 'badge-green' : 'badge-gold'}">${item.type}</span></td>
         <td>${item.value} MTS</td>
         <td style="font-family:Inter,sans-serif">${new Date(item.created_at).toLocaleDateString(currentLang === 'he' ? 'he-IL' : 'en-US')}</td>
-      </tr>
-    `).join('');
+        <td style="font-family:Inter,sans-serif">${owner
+          ? `<span class="badge badge-gold">${owner}</span>`
+          : `<span style="color:var(--text-muted)">${unassigned}</span>`}</td>
+      </tr>`;
+    }).join('');
   } catch (e) { console.error(e); }
 }
 
