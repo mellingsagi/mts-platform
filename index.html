@@ -261,6 +261,17 @@
     .input-row button:hover { opacity: 0.9; }
 
     .coupons-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+    .product-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; align-items: start; }
+    .product-column { background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .product-column-header { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .product-column-name { font-size: 15px; font-weight: 700; color: var(--gold); }
+    .product-column-coupons { display: flex; flex-direction: column; gap: 10px; }
+    .btn-delete { background: transparent; border: 1px solid #7a2b2b; color: #e07070; border-radius: 6px;
+      padding: 4px 10px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+    .btn-delete:hover { background: #7a2b2b; color: #fff; }
+    .product-tag { display: inline-block; background: var(--dark2); border: 1px solid var(--border);
+      border-radius: 5px; padding: 2px 7px; font-size: 11px; margin: 2px 3px 2px 0; color: var(--text); }
+    .product-tag.all { border-color: var(--gold); color: var(--gold); }
     .coupon-card { background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; padding: 18px; transition: border-color 0.2s; }
     .coupon-card:hover { border-color: var(--gold-dark); }
     .coupon-name { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
@@ -557,6 +568,17 @@
             <input type="number" id="coupon-max-uses" placeholder="100" min="1">
           </div>
         </div>
+        <div class="form-row">
+          <div>
+            <div class="form-label" data-i18n="couponProductLabel">Product(s)</div>
+            <input type="text" id="coupon-product" data-i18n-ph="couponProductPh" placeholder="e.g. Pro Course, Basic Course">
+          </div>
+          <div>
+            <div class="form-label" data-i18n="couponSoldAtLabel">Sold at</div>
+            <input type="text" id="coupon-sold-at" data-i18n-ph="couponSoldAtPh" placeholder="e.g. Payhip">
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin:-4px 0 12px" data-i18n="couponProductHelp">Separate multiple products with a comma. Type "all products" to make it valid for every product.</p>
         <button class="btn-generate" data-i18n="addCouponBtn" onclick="createCoupon()">➕ Add Coupon</button>
 
         <hr class="divider">
@@ -584,6 +606,14 @@
           </table>
         </div>
         <button class="btn-generate" style="margin-top:12px" data-i18n="refreshBtn" onclick="loadAdminCoins()">🔄 Refresh List</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title" data-i18n="allCouponsTitle">All Coupons</div>
+        <div id="admin-coupons-summary">
+          <div class="empty-state"><div class="empty-icon">🎟️</div><span data-i18n="noCouponsYet">No coupons yet</span></div>
+        </div>
+        <button class="btn-generate" style="margin-top:12px" data-i18n="refreshBtn" onclick="loadAdminCoupons()">🔄 Refresh List</button>
       </div>
 
     </div>
@@ -654,14 +684,13 @@
 <script>
 const SUPABASE_URL = 'https://jhheiwjxpajzbixdubmx.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ruWZ311nRp_rPXZAu_yXPA_dyg-JOc5';
-const ADMIN_SECRET = 'M9xW4bT7bR2kcJ1wZ6L9ph3Gnv74nv04bvkwp94n577';
+// Admin secret is verified server-side only — it no longer appears in this file.
 const LANG_UNLOCK_CODE = '612';
-const RIDDLE_PRIZE_LIMIT = 10;
-const RIDDLE_PRIZE_AMOUNT = 20;
 
 let currentUser = null;
 let currentLang = 'en';
 
+// ========== TRANSLATIONS ==========
 const translations = {
   en: {
     logoSub: "Matbea Sagi Platform", loginTitle: "Sign In", firstNameLabel: "First Name",
@@ -675,9 +704,7 @@ const translations = {
     confirmSaved: "I confirm I have saved my password somewhere safe", continueToSite: "Continue to Site",
     platformTitle: "Platform", logoutBtn: "Sign Out", tabHome: "🏠 Home", tabCoins: "🪙 My Coins",
     tabCoupons: "🎟️ Coupons", tabAdmin: "⚙️ Admin", balanceLabel: "Coin Balance",
-    riddleTitle: "🧩 Secret Riddle", riddleQuestion: "When you take from me I stay the same. When you add to me I stay the same. When you divide me I grow. When you multiply me I vanish. Who am I?",
-    riddleAnswerPh: "Type your answer...", riddleSubmit: "Submit", addCoinTitle: "Add Coin to Account",
-    addCoinPh: "Enter coin / coin group code", addCoinBtn: "Add",
+    addCoinTitle: "Add Coin to Account", addCoinPh: "Enter coin / coin group code", addCoinBtn: "Add",
     addCoinHelp: "Enter the code you received to add coins to your account",
     recentActivityTitle: "Recent Activity", noActivity: "No activity yet", singleCoinsTitle: "Individual Coins",
     noSingleCoins: "No individual coins", coinGroupsTitle: "Coin Groups", noCoinGroups: "No coin groups",
@@ -688,12 +715,15 @@ const translations = {
     groupValueLabel: "Value per group (MTS)", generateGroupsBtn: "⚡ Generate Groups",
     manageCouponsTitle: "Manage Coupons", couponNameLabel: "Coupon name", couponNamePh: "e.g. 20% Discount",
     couponCodeLabel: "Coupon code", couponCostLabel: "Cost in MTS coins", couponMaxUsesLabel: "Maximum uses",
+    couponProductLabel: "Product(s)", couponProductPh: "e.g. Pro Course, Basic Course", couponSoldAtLabel: "Sold at", couponSoldAtPh: "e.g. Payhip",
+    couponProductHelp: "Separate multiple products with a comma. Type \"all products\" to make it valid for every product.",
+    allProductsGroup: "All Products", allCouponsTitle: "All Coupons", thDelete: "Delete", deleteBtn: "🗑️ Delete",
+    confirmDeleteCoupon: "Delete this coupon permanently?",
     addCouponBtn: "➕ Add Coupon", existingCouponsTitle: "Existing Coupons", noCouponsYet: "No coupons yet",
     allActiveCoinsTitle: "All Active Coins", thCode: "Code", thType: "Type", thValue: "Value", thCreated: "Created",
     loading: "Loading...", refreshBtn: "🔄 Refresh List", couponRedeemedTitle: "🎉 Coupon Redeemed Successfully!",
     couponRedeemedMsg: "Your code to use:", copyCodeBtn: "📋 Copy Code", closeBtn: "Close",
-    enterCodeTitle: "Enter Code", switchToHebrew: "Switch to Hebrew", riddleCorrect: "✅ Correct!",
-    riddleWrong: "❌ Not quite, try again", riddleAnswerKey: "zero,0,nothing"
+    enterCodeTitle: "Enter Code", switchToHebrew: "Switch to Hebrew"
   },
   he: {
     logoSub: "פלטפורמת מטבע שגיא", loginTitle: "כניסה לחשבון", firstNameLabel: "שם פרטי",
@@ -707,9 +737,7 @@ const translations = {
     confirmSaved: "אני מאשר/ת ששמרתי את הסיסמא במקום בטוח", continueToSite: "המשך לאתר",
     platformTitle: "פלטפורמה", logoutBtn: "יציאה", tabHome: "🏠 ראשי", tabCoins: "🪙 המטבעות שלי",
     tabCoupons: "🎟️ קופונים", tabAdmin: "⚙️ מנהל", balanceLabel: "יתרת מטבעות",
-    riddleTitle: "🧩 חידה סודית", riddleQuestion: "כשאתה לוקח ממני אני נשאר אותו דבר. כשאתה מוסיף לי אני נשאר אותו דבר. כשאתה מחלק אותי אני גדל. כשאתה מכפיל אותי אני נעלם. מי אני?",
-    riddleAnswerPh: "הקלד את תשובתך...", riddleSubmit: "שלח", addCoinTitle: "הוספת מטבע לחשבון",
-    addCoinPh: "הכנס קוד מטבע / קבוצת מטבעות", addCoinBtn: "הוספה",
+    addCoinTitle: "הוספת מטבע לחשבון", addCoinPh: "הכנס קוד מטבע / קבוצת מטבעות", addCoinBtn: "הוספה",
     addCoinHelp: "הכנס את הקוד שקיבלת כדי להוסיף מטבעות לחשבונך",
     recentActivityTitle: "פעילות אחרונה", noActivity: "אין פעילות עדיין", singleCoinsTitle: "מטבעות בודדים",
     noSingleCoins: "אין מטבעות בודדים", coinGroupsTitle: "קבוצות מטבעות", noCoinGroups: "אין קבוצות מטבעות",
@@ -720,12 +748,15 @@ const translations = {
     groupValueLabel: "ערך כל קבוצה (MTS)", generateGroupsBtn: "⚡ צור קבוצות",
     manageCouponsTitle: "ניהול קופונים", couponNameLabel: "שם הקופון", couponNamePh: "למשל: הנחה 20%",
     couponCodeLabel: "קוד הקופון", couponCostLabel: "עלות במטבעות MTS", couponMaxUsesLabel: "מקסימום שימושים",
+    couponProductLabel: "מוצר/ים", couponProductPh: "למשל: קורס פרו, קורס בסיסי", couponSoldAtLabel: "נמכר ב", couponSoldAtPh: "למשל: Payhip",
+    couponProductHelp: "הפרד בין כמה מוצרים בפסיק. כתוב \"all products\" כדי שהקופון יתאים לכל המוצרים.",
+    allProductsGroup: "כל המוצרים", allCouponsTitle: "כל הקופונים", thDelete: "מחיקה", deleteBtn: "🗑️ מחק",
+    confirmDeleteCoupon: "למחוק את הקופון לצמיתות?",
     addCouponBtn: "➕ הוספת קופון", existingCouponsTitle: "קופונים קיימים", noCouponsYet: "אין קופונים עדיין",
     allActiveCoinsTitle: "כל המטבעות הפעילים", thCode: "קוד", thType: "סוג", thValue: "ערך", thCreated: "נוצר",
     loading: "טוען...", refreshBtn: "🔄 רענן רשימה", couponRedeemedTitle: "🎉 קופון מומש בהצלחה!",
     couponRedeemedMsg: "הקוד שלך לשימוש:", copyCodeBtn: "📋 העתק קוד", closeBtn: "סגור",
-    enterCodeTitle: "הכנס קוד", switchToHebrew: "החלף לעברית", riddleCorrect: "✅ נכון!",
-    riddleWrong: "❌ לא בדיוק, נסה שוב", riddleAnswerKey: "אפס,0"
+    enterCodeTitle: "הכנס קוד", switchToHebrew: "החלף לעברית"
   }
 };
 
@@ -756,6 +787,7 @@ function switchLanguage(lang) {
   applyTranslations();
 }
 
+// ========== LANGUAGE PROMPT (right dot) ==========
 function openLangPrompt() {
   document.getElementById('lang-code-input').value = '';
   document.getElementById('lang-switch-btn-wrapper').style.display = 'none';
@@ -773,6 +805,7 @@ document.addEventListener('input', (e) => {
   }
 });
 
+// ========== SECRET SQUARE GAME ==========
 let secretClickCount = 0;
 let secretChosenLang = null;
 const secretRiddles = {
@@ -780,7 +813,7 @@ const secretRiddles = {
     question: "אני התשובה הנכונה לחידה הזאת. אם תנחש אותי – תטעה. אם לא תנחש אותי – גם תטעה. מי אני?",
     answers: ["טעות"],
     submitLabel: "שלח", closeLabel: "סגור", title: "חידה",
-    wrongMsg: "❌ לא בדיוק, נסה שוב", correctMsg: "✅ נכון!",
+    wrongMsg: "❌ לא בדיוק, נסה שוב",
     prizeTitle: "כל הכבוד!",
     prizeMsg: (n) => `כל הכבוד על זה שהצלחתם להגיע לפה, כפרס תקבלו ${n} מטבעות MTS`,
     alreadyClaimedMsg: "כבר קיבלת את הפרס הזה בעבר.",
@@ -791,7 +824,7 @@ const secretRiddles = {
     question: "I am the correct answer to this riddle. If you guess me, you'll be wrong. If you don't guess me, you'll also be wrong. Who am I?",
     answers: ["wrong", "mistake", "a mistake"],
     submitLabel: "Submit", closeLabel: "Close", title: "Riddle",
-    wrongMsg: "❌ Not quite, try again", correctMsg: "✅ Correct!",
+    wrongMsg: "❌ Not quite, try again",
     prizeTitle: "Congratulations!",
     prizeMsg: (n) => `Congratulations on making it here! As a reward you'll receive ${n} MTS coins`,
     alreadyClaimedMsg: "You've already claimed this reward before.",
@@ -847,49 +880,22 @@ async function submitSecretRiddleAnswer() {
 async function handleSecretPrize() {
   const r = secretRiddles[secretChosenLang];
 
-  if (!currentUser) {
+  function showPrizeModal(msg) {
     document.getElementById('secret-prize-title').textContent = r.prizeTitle;
-    document.getElementById('secret-prize-msg').textContent = r.notLoggedInMsg;
+    document.getElementById('secret-prize-msg').textContent = msg;
     document.getElementById('secret-prize-close-btn').textContent = r.closeLabel;
     document.getElementById('modal-secret-prize').classList.add('open');
-    return;
   }
 
+  if (!currentUser) { showPrizeModal(r.notLoggedInMsg); return; }
+
   try {
-    const existing = await dbQuery('riddle_rewards', 'GET', null, `?user_id=eq.${currentUser.id}`);
-    if (existing && existing.length > 0) {
-      document.getElementById('secret-prize-title').textContent = r.prizeTitle;
-      document.getElementById('secret-prize-msg').textContent = r.alreadyClaimedMsg;
-      document.getElementById('secret-prize-close-btn').textContent = r.closeLabel;
-      document.getElementById('modal-secret-prize').classList.add('open');
-      return;
-    }
-
-    if (!currentUser.is_admin) {
-      const allClaims = await dbQuery('riddle_rewards', 'GET', null, `?select=user_id,users(is_admin)`);
-      const nonAdminClaims = (allClaims || []).filter(c => !(c.users && c.users.is_admin));
-      if (nonAdminClaims.length >= RIDDLE_PRIZE_LIMIT) {
-        document.getElementById('secret-prize-title').textContent = r.prizeTitle;
-        document.getElementById('secret-prize-msg').textContent = r.limitReachedMsg;
-        document.getElementById('secret-prize-close-btn').textContent = r.closeLabel;
-        document.getElementById('modal-secret-prize').classList.add('open');
-        return;
-      }
-    }
-
-    const code = 'prize_' + generateCode(24);
-    const coins = await dbQuery('coins', 'POST', { code, value: RIDDLE_PRIZE_AMOUNT });
-    const coin = Array.isArray(coins) ? coins[0] : coins;
-    await dbQuery('user_coins', 'POST', { user_id: currentUser.id, coin_id: coin.id });
-    await dbQuery('riddle_rewards', 'POST', { user_id: currentUser.id });
-
-    document.getElementById('secret-prize-title').textContent = r.prizeTitle;
-    document.getElementById('secret-prize-msg').textContent = r.prizeMsg(RIDDLE_PRIZE_AMOUNT);
-    document.getElementById('secret-prize-close-btn').textContent = r.closeLabel;
-    document.getElementById('modal-secret-prize').classList.add('open');
-
+    const res = await rpc('claim_riddle_reward', { p_token: currentUser.token });
+    if (res.status === 'already') { showPrizeModal(r.alreadyClaimedMsg); return; }
+    if (res.status === 'limit') { showPrizeModal(r.limitReachedMsg); return; }
+    if (res.status === 'auth') { showPrizeModal(r.notLoggedInMsg); return; }
+    showPrizeModal(r.prizeMsg(res.amount || 20));
     await loadBalance();
-
   } catch (err) {
     showToast('Error: ' + err.message, 'error');
   }
@@ -901,34 +907,28 @@ function closeSecretModals() {
   document.getElementById('modal-secret-prize').classList.remove('open');
 }
 
-async function dbQuery(table, method = 'GET', body = null, filter = '') {
-  const opts = {
-    method,
+// ========== SERVER RPC ==========
+async function rpc(fn, args = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'Prefer': method === 'POST' ? 'return=representation' : ''
-    }
-  };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${filter}`, opts);
+      'Authorization': `Bearer ${SUPABASE_KEY}`
+    },
+    body: JSON.stringify(args)
+  });
   if (!res.ok) {
-    const err = await res.json();
+    let err = {};
+    try { err = await res.json(); } catch (e) {}
     throw new Error(err.message || 'Server error');
   }
-  if (method === 'DELETE' || res.status === 204) return null;
-  return res.json();
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
 
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-
-function generateCode(length = 28) {
+// ========== HELPERS ==========
+function generateCode(length = 32) {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   const arr = new Uint8Array(length);
@@ -951,6 +951,7 @@ function showToast(msg, type = 'info') {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+// ========== AUTH ==========
 async function handleRegister() {
   const firstname = document.getElementById('reg-firstname').value.trim();
   const lastname = document.getElementById('reg-lastname').value.trim();
@@ -959,21 +960,15 @@ async function handleRegister() {
   if (!firstname || !lastname) return showToast(currentLang === 'he' ? 'יש למלא שם ושם משפחה' : 'Please fill in first and last name', 'error');
   if (!terms) return showToast(currentLang === 'he' ? 'יש לאשר את תנאי השימוש' : 'You must agree to the Terms of Use', 'error');
 
-  const isAdmin = firstname === ADMIN_SECRET;
-
   try {
     const password = generatePassword();
-    const hash = await hashPassword(password);
+    const result = await rpc('register_user', { p_first_name: firstname, p_last_name: lastname, p_password: password });
 
-    const users = await dbQuery('users', 'POST', {
-      first_name: isAdmin ? 'Admin' : firstname,
-      last_name: isAdmin ? 'MTS' : lastname,
-      password_hash: hash,
-      is_admin: isAdmin
-    });
+    if (result.error) {
+      return showToast(currentLang === 'he' ? 'שגיאה ביצירת חשבון' : 'Error creating account', 'error');
+    }
 
-    const user = Array.isArray(users) ? users[0] : users;
-    sessionStorage.setItem('mts_user', JSON.stringify({ ...user, _password: password }));
+    sessionStorage.setItem('mts_user', JSON.stringify(result));
 
     document.getElementById('reveal-password').textContent = password;
     showScreen('screen-password-reveal');
@@ -987,8 +982,7 @@ function confirmPasswordSaved() {
   if (!document.getElementById('confirm-saved').checked) {
     return showToast(currentLang === 'he' ? 'יש לאשר ששמרת את הסיסמא' : 'Please confirm you saved your password', 'error');
   }
-  const userData = JSON.parse(sessionStorage.getItem('mts_user'));
-  currentUser = userData;
+  currentUser = JSON.parse(sessionStorage.getItem('mts_user'));
   enterApp();
 }
 
@@ -999,16 +993,13 @@ async function handleLogin() {
   if (!name || !password) return showToast(currentLang === 'he' ? 'יש למלא את כל השדות' : 'Please fill in all fields', 'error');
 
   try {
-    const hash = await hashPassword(password);
-    const users = await dbQuery('users', 'GET', null,
-      `?first_name=eq.${encodeURIComponent(name)}&password_hash=eq.${hash}&select=*`
-    );
+    const result = await rpc('login_user', { p_first_name: name, p_password: password });
 
-    if (!users || users.length === 0) {
+    if (result.error) {
       return showToast(currentLang === 'he' ? 'שם או סיסמא שגויים' : 'Incorrect name or password', 'error');
     }
 
-    currentUser = users[0];
+    currentUser = result;
     sessionStorage.setItem('mts_user', JSON.stringify(currentUser));
     enterApp();
 
@@ -1018,6 +1009,9 @@ async function handleLogin() {
 }
 
 function handleLogout() {
+  if (currentUser && currentUser.token) {
+    rpc('logout_user', { p_token: currentUser.token }).catch(() => {});
+  }
   currentUser = null;
   sessionStorage.removeItem('mts_user');
   showScreen('screen-login');
@@ -1039,6 +1033,7 @@ function enterApp() {
   loadUserData();
 }
 
+// ========== TABS ==========
 function switchTab(id) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1050,20 +1045,7 @@ function switchTab(id) {
   if (id === 'tab-admin') { loadAdminCoins(); loadAdminCoupons(); }
 }
 
-function checkRiddleAnswer() {
-  const answer = document.getElementById('riddle-answer').value.trim().toLowerCase();
-  const feedback = document.getElementById('riddle-feedback');
-  const validAnswers = translations[currentLang].riddleAnswerKey.split(',');
-
-  if (validAnswers.includes(answer)) {
-    feedback.textContent = translations[currentLang].riddleCorrect;
-    feedback.className = 'riddle-feedback correct';
-  } else {
-    feedback.textContent = translations[currentLang].riddleWrong;
-    feedback.className = 'riddle-feedback wrong';
-  }
-}
-
+// ========== USER DATA ==========
 async function loadUserData() {
   await loadBalance();
   await loadRecentActivity();
@@ -1071,15 +1053,7 @@ async function loadUserData() {
 
 async function loadBalance() {
   try {
-    const coins = await dbQuery('user_coins', 'GET', null,
-      `?user_id=eq.${currentUser.id}&select=coin_id,coins(value)`);
-    const groups = await dbQuery('user_coin_groups', 'GET', null,
-      `?user_id=eq.${currentUser.id}&select=group_id,coin_groups(value)`);
-
-    let total = 0;
-    if (coins) coins.forEach(c => total += (c.coins?.value || 0));
-    if (groups) groups.forEach(g => total += (g.coin_groups?.value || 0));
-
+    const total = await rpc('get_my_balance', { p_token: currentUser.token });
     document.getElementById('total-balance').textContent = total;
     document.getElementById('balance-display').textContent = `${total} MTS`;
   } catch (e) { console.error(e); }
@@ -1087,75 +1061,59 @@ async function loadBalance() {
 
 async function loadRecentActivity() {
   try {
-    const redemptions = await dbQuery('redemptions', 'GET', null,
-      `?user_id=eq.${currentUser.id}&select=*,coupons(name)&order=redeemed_at.desc&limit=5`);
-
+    const acts = await rpc('get_my_activity', { p_token: currentUser.token });
     const container = document.getElementById('recent-activity');
-    if (!redemptions || redemptions.length === 0) {
+
+    if (!acts || acts.length === 0) {
       container.innerHTML = `<div class="empty-state"><div class="empty-icon">📊</div>${translations[currentLang].noActivity}</div>`;
       return;
     }
 
     const label = currentLang === 'he' ? 'מימוש קופון' : 'Coupon redeemed';
-    container.innerHTML = redemptions.map(r => `
+    container.innerHTML = acts.map(r => `
       <div class="coin-item">
-        <span>🎟️ ${label}: ${r.coupons?.name || '—'}</span>
+        <span>🎟️ ${label}: ${r.name || '—'}</span>
         <span style="font-size:11px;color:var(--text-muted)">${new Date(r.redeemed_at).toLocaleDateString(currentLang === 'he' ? 'he-IL' : 'en-US')}</span>
       </div>
     `).join('');
   } catch (e) { console.error(e); }
 }
 
+// ========== ADD COIN ==========
 async function addCoinByCode() {
   const code = document.getElementById('add-coin-code').value.trim();
   if (!code) return showToast(currentLang === 'he' ? 'יש להכניס קוד' : 'Please enter a code', 'error');
 
   try {
-    const coins = await dbQuery('coins', 'GET', null,
-      `?code=eq.${encodeURIComponent(code)}&is_used=eq.false`);
+    const res = await rpc('add_coin_by_code', { p_token: currentUser.token, p_code: code });
 
-    if (coins && coins.length > 0) {
-      const coin = coins[0];
-      const existing = await dbQuery('user_coins', 'GET', null,
-        `?user_id=eq.${currentUser.id}&coin_id=eq.${coin.id}`);
-      if (existing && existing.length > 0) return showToast(currentLang === 'he' ? 'מטבע זה כבר נמצא בחשבון שלך' : 'This coin is already in your account', 'error');
-
-      await dbQuery('user_coins', 'POST', { user_id: currentUser.id, coin_id: coin.id });
-      document.getElementById('add-coin-code').value = '';
-      await loadBalance();
-      showToast((currentLang === 'he' ? `✅ מטבע נוסף! ערך: ${coin.value} MTS` : `✅ Coin added! Value: ${coin.value} MTS`), 'success');
-      return;
+    if (res.error === 'owned') {
+      return showToast(currentLang === 'he' ? 'קוד זה כבר נמצא בחשבון שלך' : 'This code is already in your account', 'error');
+    }
+    if (res.error === 'not_found') {
+      return showToast(currentLang === 'he' ? 'קוד לא נמצא או כבר שומש' : 'Code not found or already used', 'error');
+    }
+    if (res.error) {
+      return showToast(currentLang === 'he' ? 'שגיאה' : 'Error', 'error');
     }
 
-    const groups = await dbQuery('coin_groups', 'GET', null,
-      `?code=eq.${encodeURIComponent(code)}&is_used=eq.false`);
-
-    if (groups && groups.length > 0) {
-      const group = groups[0];
-      const existing = await dbQuery('user_coin_groups', 'GET', null,
-        `?user_id=eq.${currentUser.id}&group_id=eq.${group.id}`);
-      if (existing && existing.length > 0) return showToast(currentLang === 'he' ? 'קבוצה זו כבר נמצאת בחשבון שלך' : 'This group is already in your account', 'error');
-
-      await dbQuery('user_coin_groups', 'POST', { user_id: currentUser.id, group_id: group.id });
-      document.getElementById('add-coin-code').value = '';
-      await loadBalance();
-      showToast((currentLang === 'he' ? `✅ קבוצת מטבעות נוספה! ערך: ${group.value} MTS` : `✅ Coin group added! Value: ${group.value} MTS`), 'success');
-      return;
-    }
-
-    showToast(currentLang === 'he' ? 'קוד לא נמצא או כבר שומש' : 'Code not found or already used', 'error');
+    document.getElementById('add-coin-code').value = '';
+    await loadBalance();
+    const kindLabel = res.kind === 'group'
+      ? (currentLang === 'he' ? 'קבוצת מטבעות נוספה' : 'Coin group added')
+      : (currentLang === 'he' ? 'מטבע נוסף' : 'Coin added');
+    showToast(`✅ ${kindLabel}! ${currentLang === 'he' ? 'ערך' : 'Value'}: ${res.value} MTS`, 'success');
 
   } catch (err) {
     showToast('Error: ' + err.message, 'error');
   }
 }
 
+// ========== MY COINS ==========
 async function loadUserCoins() {
   try {
-    const coins = await dbQuery('user_coins', 'GET', null,
-      `?user_id=eq.${currentUser.id}&select=id,coin_id,coins(code,value,is_used)`);
-    const groups = await dbQuery('user_coin_groups', 'GET', null,
-      `?user_id=eq.${currentUser.id}&select=id,group_id,coin_groups(code,value,is_used)`);
+    const coins = await rpc('get_my_coins', { p_token: currentUser.token });
+    const groups = await rpc('get_my_groups', { p_token: currentUser.token });
 
     const coinsList = document.getElementById('user-coins-list');
     const groupsList = document.getElementById('user-groups-list');
@@ -1165,8 +1123,8 @@ async function loadUserCoins() {
     } else {
       coinsList.innerHTML = coins.map(c => `
         <div class="coin-item">
-          <span class="coin-code">${c.coins?.code || '—'}</span>
-          <span class="coin-val">${c.coins?.value || 0} MTS</span>
+          <span class="coin-code">${c.code}</span>
+          <span class="coin-val">${c.value} MTS</span>
         </div>
       `).join('');
     }
@@ -1176,20 +1134,44 @@ async function loadUserCoins() {
     } else {
       groupsList.innerHTML = groups.map(g => `
         <div class="coin-item">
-          <span class="coin-code">${g.coin_groups?.code || '—'}</span>
-          <span class="coin-val">${g.coin_groups?.value || 0} MTS</span>
+          <span class="coin-code">${g.code}</span>
+          <span class="coin-val">${g.value} MTS</span>
         </div>
       `).join('');
     }
   } catch (e) { showToast(currentLang === 'he' ? 'שגיאה בטעינת מטבעות' : 'Error loading coins', 'error'); }
 }
 
+// ========== COUPONS (product columns) ==========
+const ALL_PRODUCTS = '__ALL__';
+
+// מפרק מחרוזת מוצרים לרשימה. ריק / "all products" => קבוצת כל המוצרים
+function parseProducts(raw) {
+  if (!raw || !raw.trim()) return [ALL_PRODUCTS];
+  const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
+  if (parts.length === 0) return [ALL_PRODUCTS];
+  const allAliases = ['all', 'all products', 'all prodacts', '__all__', 'כל המוצרים', 'כל מוצר', 'הכל'];
+  if (parts.some(p => allAliases.includes(p.toLowerCase()))) return [ALL_PRODUCTS];
+  return [...new Set(parts)];
+}
+
+// מציג את המוצרים כתגיות
+function renderProductTags(raw) {
+  const allLabel = translations[currentLang].allProductsGroup;
+  return parseProducts(raw).map(p =>
+    p === ALL_PRODUCTS
+      ? `<span class="product-tag all">⭐ ${allLabel}</span>`
+      : `<span class="product-tag">${p}</span>`
+  ).join('');
+}
+
 async function loadCoupons() {
   try {
-    const coupons = await dbQuery('coupons', 'GET', null, '?select=*');
+    const coupons = await rpc('list_coupons', {});
     const grid = document.getElementById('coupons-grid');
 
     if (!coupons || coupons.length === 0) {
+      grid.className = 'coupons-grid';
       grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🎟️</div>${translations[currentLang].noCouponsAvailable}</div>`;
       return;
     }
@@ -1197,81 +1179,81 @@ async function loadCoupons() {
     const available = coupons.filter(c => c.used_count < c.max_uses);
 
     if (available.length === 0) {
+      grid.className = 'coupons-grid';
       grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🎟️</div>${currentLang === 'he' ? 'כל הקופונים נוצלו' : 'All coupons have been claimed'}</div>`;
       return;
     }
 
     const usesLeftLabel = currentLang === 'he' ? 'שימושים נותרו' : 'uses left';
     const btnLabel = currentLang === 'he' ? 'המר מטבעות' : 'Redeem Coins';
+    const soldAtLabel = currentLang === 'he' ? 'נמכר ב' : 'Sold at';
+    const allLabel = translations[currentLang].allProductsGroup;
 
-    grid.innerHTML = available.map(c => `
-      <div class="coupon-card">
-        <div class="coupon-name">${c.name}</div>
-        <div class="coupon-cost">🪙 ${c.cost_coins} MTS</div>
-        <div class="coupon-uses">${c.max_uses - c.used_count} ${usesLeftLabel}</div>
-        <button class="btn-redeem" onclick="redeemCoupon('${c.id}','${c.name}','${c.code}',${c.cost_coins})">
-          ${btnLabel}
-        </button>
+    const byProduct = {};
+    available.forEach(c => {
+      parseProducts(c.product_name).forEach(p => {
+        const key = (p === ALL_PRODUCTS) ? allLabel : p;
+        if (!byProduct[key]) byProduct[key] = [];
+        byProduct[key].push(c);
+      });
+    });
+
+    // קבוצת "כל המוצרים" מוצגת ראשונה
+    const ordered = Object.entries(byProduct).sort((a, b) => {
+      if (a[0] === allLabel) return -1;
+      if (b[0] === allLabel) return 1;
+      return a[0].localeCompare(b[0]);
+    });
+
+    grid.className = 'product-columns';
+    grid.innerHTML = ordered.map(([product, list]) => `
+      <div class="product-column">
+        <div class="product-column-header">
+          <div class="product-column-name">${product === allLabel ? '⭐' : '📦'} ${product}</div>
+        </div>
+        <div class="product-column-coupons">
+          ${list.map(c => `
+            <div class="coupon-card">
+              <div class="coupon-name">${c.name}</div>
+              <div class="coupon-cost">🪙 ${c.cost_coins} MTS</div>
+              ${c.sold_at ? `<div class="coupon-uses">🛒 ${soldAtLabel}: ${c.sold_at}</div>` : ''}
+              <div class="coupon-uses">${c.max_uses - c.used_count} ${usesLeftLabel}</div>
+              <button class="btn-redeem" onclick="redeemCoupon('${c.id}')">${btnLabel}</button>
+            </div>
+          `).join('')}
+        </div>
       </div>
     `).join('');
   } catch (e) { showToast(currentLang === 'he' ? 'שגיאה בטעינת קופונים' : 'Error loading coupons', 'error'); }
 }
 
-async function redeemCoupon(couponId, couponName, couponCode, cost) {
-  const coins = await dbQuery('user_coins', 'GET', null,
-    `?user_id=eq.${currentUser.id}&select=coin_id,coins(id,value)`);
-  const groups = await dbQuery('user_coin_groups', 'GET', null,
-    `?user_id=eq.${currentUser.id}&select=group_id,coin_groups(id,value)`);
+async function redeemCoupon(couponId) {
+  try {
+    const res = await rpc('redeem_coupon', { p_token: currentUser.token, p_coupon_id: couponId });
 
-  let balance = 0;
-  if (coins) coins.forEach(c => balance += (c.coins?.value || 0));
-  if (groups) groups.forEach(g => balance += (g.coin_groups?.value || 0));
-
-  if (balance < cost) {
-    return showToast((currentLang === 'he' ? `אין מספיק מטבעות. יש לך ${balance} MTS, נדרש ${cost} MTS` : `Not enough coins. You have ${balance} MTS, need ${cost} MTS`), 'error');
-  }
-
-  const prevRedemptions = await dbQuery('redemptions', 'GET', null,
-    `?user_id=eq.${currentUser.id}&coupon_id=eq.${couponId}`);
-  if (prevRedemptions && prevRedemptions.length > 0) {
-    return showToast(currentLang === 'he' ? 'כבר מימשת קופון זה בעבר' : 'You already redeemed this coupon', 'error');
-  }
-
-  let remaining = cost;
-  const allCoins = coins ? [...coins] : [];
-  const allGroups = groups ? [...groups] : [];
-
-  for (const uc of allCoins) {
-    if (remaining <= 0) break;
-    const val = uc.coins?.value || 0;
-    if (val <= remaining) {
-      remaining -= val;
-      await dbQuery(`coins?id=eq.${uc.coin_id}`, 'PATCH', { is_used: true });
-      await dbQuery(`user_coins?user_id=eq.${currentUser.id}&coin_id=eq.${uc.coin_id}`, 'DELETE');
+    if (res.error === 'insufficient') {
+      return showToast((currentLang === 'he'
+        ? `אין מספיק מטבעות. יש לך ${res.balance} MTS, נדרש ${res.cost} MTS`
+        : `Not enough coins. You have ${res.balance} MTS, need ${res.cost} MTS`), 'error');
     }
-  }
-
-  for (const ug of allGroups) {
-    if (remaining <= 0) break;
-    const val = ug.coin_groups?.value || 0;
-    if (val <= remaining) {
-      remaining -= val;
-      await dbQuery(`coin_groups?id=eq.${ug.group_id}`, 'PATCH', { is_used: true });
-      await dbQuery(`user_coin_groups?user_id=eq.${currentUser.id}&group_id=eq.${ug.group_id}`, 'DELETE');
+    if (res.error === 'already') {
+      return showToast(currentLang === 'he' ? 'כבר מימשת קופון זה בעבר' : 'You already redeemed this coupon', 'error');
     }
+    if (res.error === 'sold_out') {
+      return showToast(currentLang === 'he' ? 'הקופון אזל' : 'This coupon is sold out', 'error');
+    }
+    if (res.error) {
+      return showToast(currentLang === 'he' ? 'שגיאה במימוש' : 'Redemption error', 'error');
+    }
+
+    document.getElementById('modal-coupon-code').textContent = res.code;
+    document.getElementById('modal-coupon').classList.add('open');
+
+    await loadBalance();
+    loadCoupons();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
   }
-
-  await dbQuery('redemptions', 'POST', { user_id: currentUser.id, coupon_id: couponId });
-
-  const couponData = await dbQuery('coupons', 'GET', null, `?id=eq.${couponId}&select=used_count`);
-  if (couponData && couponData[0]) {
-    await dbQuery(`coupons?id=eq.${couponId}`, 'PATCH', { used_count: couponData[0].used_count + 1 });
-  }
-
-  document.getElementById('modal-coupon-code').textContent = couponCode;
-  document.getElementById('modal-coupon').classList.add('open');
-
-  await loadBalance();
 }
 
 function closeModal() {
@@ -1284,6 +1266,7 @@ function copyModalCode() {
   showToast(currentLang === 'he' ? '✅ הקוד הועתק!' : '✅ Code copied!', 'success');
 }
 
+// ========== ADMIN ==========
 async function generateCoins() {
   const amount = parseInt(document.getElementById('gen-coin-amount').value) || 10;
   const value = parseInt(document.getElementById('gen-coin-value').value) || 1;
@@ -1293,26 +1276,28 @@ async function generateCoins() {
   const container = document.getElementById('generated-coins');
   container.innerHTML = `<div style="color:var(--text-muted);font-size:12px;padding:8px">${translations[currentLang].loading}</div>`;
 
-  const generated = [];
-  for (let i = 0; i < amount; i++) {
-    const code = generateCode(28);
-    try {
-      await dbQuery('coins', 'POST', { code, value });
-      generated.push(code);
-    } catch (e) { console.error(e); }
+  try {
+    const res = await rpc('admin_generate_coins', { p_token: currentUser.token, p_amount: amount, p_value: value });
+    if (res.error) {
+      container.innerHTML = '';
+      return showToast(currentLang === 'he' ? 'אין הרשאה' : 'Not authorized', 'error');
+    }
+
+    const copyLabel = currentLang === 'he' ? 'העתק' : 'Copy';
+    const copiedMsg = currentLang === 'he' ? 'הועתק!' : 'Copied!';
+
+    container.innerHTML = res.codes.map(code => `
+      <div class="gen-item">
+        <span>${code}</span>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText('${code}');showToast('${copiedMsg}','success')">${copyLabel}</button>
+      </div>
+    `).join('');
+
+    showToast((currentLang === 'he' ? `✅ נוצרו ${res.codes.length} מטבעות` : `✅ Generated ${res.codes.length} coins`), 'success');
+  } catch (err) {
+    container.innerHTML = '';
+    showToast('Error: ' + err.message, 'error');
   }
-
-  const copyLabel = currentLang === 'he' ? 'העתק' : 'Copy';
-  const copiedMsg = currentLang === 'he' ? 'הועתק!' : 'Copied!';
-
-  container.innerHTML = generated.map(code => `
-    <div class="gen-item">
-      <span>${code}</span>
-      <button class="copy-btn" onclick="navigator.clipboard.writeText('${code}');showToast('${copiedMsg}','success')">${copyLabel}</button>
-    </div>
-  `).join('');
-
-  showToast((currentLang === 'he' ? `✅ נוצרו ${generated.length} מטבעות` : `✅ Generated ${generated.length} coins`), 'success');
 }
 
 async function generateGroups() {
@@ -1324,26 +1309,28 @@ async function generateGroups() {
   const container = document.getElementById('generated-groups');
   container.innerHTML = `<div style="color:var(--text-muted);font-size:12px;padding:8px">${translations[currentLang].loading}</div>`;
 
-  const generated = [];
-  for (let i = 0; i < amount; i++) {
-    const code = 'grp_' + generateCode(24);
-    try {
-      await dbQuery('coin_groups', 'POST', { code, value });
-      generated.push({ code, value });
-    } catch (e) { console.error(e); }
+  try {
+    const res = await rpc('admin_generate_groups', { p_token: currentUser.token, p_amount: amount, p_value: value });
+    if (res.error) {
+      container.innerHTML = '';
+      return showToast(currentLang === 'he' ? 'אין הרשאה' : 'Not authorized', 'error');
+    }
+
+    const copyLabel = currentLang === 'he' ? 'העתק' : 'Copy';
+    const copiedMsg = currentLang === 'he' ? 'הועתק!' : 'Copied!';
+
+    container.innerHTML = res.codes.map(code => `
+      <div class="gen-item">
+        <span>${code}</span>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText('${code}');showToast('${copiedMsg}','success')">${copyLabel}</button>
+      </div>
+    `).join('');
+
+    showToast((currentLang === 'he' ? `✅ נוצרו ${res.codes.length} קבוצות` : `✅ Generated ${res.codes.length} groups`), 'success');
+  } catch (err) {
+    container.innerHTML = '';
+    showToast('Error: ' + err.message, 'error');
   }
-
-  const copyLabel = currentLang === 'he' ? 'העתק' : 'Copy';
-  const copiedMsg = currentLang === 'he' ? 'הועתק!' : 'Copied!';
-
-  container.innerHTML = generated.map(g => `
-    <div class="gen-item">
-      <span>${g.code}</span>
-      <button class="copy-btn" onclick="navigator.clipboard.writeText('${g.code}');showToast('${copiedMsg}','success')">${copyLabel}</button>
-    </div>
-  `).join('');
-
-  showToast((currentLang === 'he' ? `✅ נוצרו ${generated.length} קבוצות` : `✅ Generated ${generated.length} groups`), 'success');
 }
 
 async function createCoupon() {
@@ -1351,15 +1338,24 @@ async function createCoupon() {
   const code = document.getElementById('coupon-code').value.trim();
   const cost = parseInt(document.getElementById('coupon-cost').value);
   const maxUses = parseInt(document.getElementById('coupon-max-uses').value);
+  const productName = document.getElementById('coupon-product').value.trim();
+  const soldAt = document.getElementById('coupon-sold-at').value.trim();
 
   if (!name || !code || !cost || !maxUses) return showToast(currentLang === 'he' ? 'יש למלא את כל השדות' : 'Please fill in all fields', 'error');
 
   try {
-    await dbQuery('coupons', 'POST', { name, code, cost_coins: cost, max_uses: maxUses });
+    const res = await rpc('admin_create_coupon', {
+      p_token: currentUser.token, p_name: name, p_code: code,
+      p_cost: cost, p_max_uses: maxUses, p_product: productName, p_sold_at: soldAt
+    });
+    if (res.error) return showToast(currentLang === 'he' ? 'אין הרשאה' : 'Not authorized', 'error');
+
     document.getElementById('coupon-name').value = '';
     document.getElementById('coupon-code').value = '';
     document.getElementById('coupon-cost').value = '';
     document.getElementById('coupon-max-uses').value = '';
+    document.getElementById('coupon-product').value = '';
+    document.getElementById('coupon-sold-at').value = '';
     showToast(currentLang === 'he' ? '✅ קופון נוצר בהצלחה' : '✅ Coupon created successfully', 'success');
     loadAdminCoupons();
   } catch (err) {
@@ -1369,45 +1365,65 @@ async function createCoupon() {
 
 async function loadAdminCoupons() {
   try {
-    const coupons = await dbQuery('coupons', 'GET', null, '?select=*&order=created_at.desc');
-    const container = document.getElementById('admin-coupons-list');
+    const coupons = await rpc('admin_list_coupons', { p_token: currentUser.token });
+    const containers = ['admin-coupons-list', 'admin-coupons-summary']
+      .map(id => document.getElementById(id)).filter(Boolean);
+
+    if (coupons.error) return;
 
     if (!coupons || coupons.length === 0) {
-      container.innerHTML = `<div class="empty-state"><div class="empty-icon">🎟️</div>${translations[currentLang].noCouponsYet}</div>`;
+      const empty = `<div class="empty-state"><div class="empty-icon">🎟️</div>${translations[currentLang].noCouponsYet}</div>`;
+      containers.forEach(el => el.innerHTML = empty);
       return;
     }
 
     const t = translations[currentLang];
-    container.innerHTML = `<div class="table-wrapper"><table>
-      <thead><tr><th>${t.couponNameLabel}</th><th>${t.couponCodeLabel}</th><th>${t.couponCostLabel}</th><th>${currentLang === 'he' ? 'שימושים' : 'Uses'}</th></tr></thead>
+    const html = `<div class="table-wrapper"><table>
+      <thead><tr><th>${t.couponNameLabel}</th><th>${t.couponCodeLabel}</th><th>${t.couponProductLabel}</th><th>${t.couponSoldAtLabel}</th><th>${t.couponCostLabel}</th><th>${currentLang === 'he' ? 'שימושים' : 'Uses'}</th><th>${t.thDelete}</th></tr></thead>
       <tbody>
         ${coupons.map(c => `
           <tr>
             <td style="font-family:Inter,sans-serif">${c.name}</td>
             <td>${c.code}</td>
+            <td style="font-family:Inter,sans-serif">${renderProductTags(c.product_name)}</td>
+            <td style="font-family:Inter,sans-serif">${c.sold_at || '—'}</td>
             <td><span class="badge badge-gold">${c.cost_coins} MTS</span></td>
             <td>${c.used_count}/${c.max_uses}</td>
+            <td><button class="btn-delete" onclick="deleteCoupon('${c.id}')">${t.deleteBtn}</button></td>
           </tr>
         `).join('')}
       </tbody>
     </table></div>`;
+
+    containers.forEach(el => el.innerHTML = html);
   } catch (e) { console.error(e); }
+}
+
+async function deleteCoupon(couponId) {
+  if (!confirm(translations[currentLang].confirmDeleteCoupon)) return;
+  try {
+    const res = await rpc('admin_delete_coupon', { p_token: currentUser.token, p_coupon_id: couponId });
+    if (res.error) return showToast(currentLang === 'he' ? 'אין הרשאה' : 'Not authorized', 'error');
+    showToast(currentLang === 'he' ? '🗑️ הקופון נמחק' : '🗑️ Coupon deleted', 'success');
+    loadAdminCoupons();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
 }
 
 async function loadAdminCoins() {
   try {
-    const coins = await dbQuery('coins', 'GET', null,
-      '?is_used=eq.false&select=code,value,created_at&order=created_at.desc&limit=50');
-    const groups = await dbQuery('coin_groups', 'GET', null,
-      '?is_used=eq.false&select=code,value,created_at&order=created_at.desc&limit=50');
-
+    const res = await rpc('admin_list_active', { p_token: currentUser.token });
     const tbody = document.getElementById('admin-coins-table');
+
+    if (res.error) return;
+
     const coinLabel = currentLang === 'he' ? 'מטבע' : 'Coin';
     const groupLabel = currentLang === 'he' ? 'קבוצה' : 'Group';
 
     const all = [
-      ...(coins || []).map(c => ({ ...c, type: coinLabel })),
-      ...(groups || []).map(g => ({ ...g, type: groupLabel }))
+      ...(res.coins || []).map(c => ({ ...c, type: coinLabel })),
+      ...(res.groups || []).map(g => ({ ...g, type: groupLabel }))
     ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     if (all.length === 0) {
@@ -1426,6 +1442,7 @@ async function loadAdminCoins() {
   } catch (e) { console.error(e); }
 }
 
+// ========== INIT ==========
 window.onload = () => {
   applyTranslations();
   const saved = sessionStorage.getItem('mts_user');
@@ -1436,6 +1453,7 @@ window.onload = () => {
     showScreen('screen-login');
   }
 };
+
 </script>
 </body>
 </html>
